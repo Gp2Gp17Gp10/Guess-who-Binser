@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guess Who: School Edition</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, #f5deb3, #d2b48c);
+    color: #4b2e05;
+    text-align: center;
+    margin: 0;
+    padding: 30px;
+  }
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    color: #3e2723;
+  }
+  .center-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80vh;
+  }
+  .rules-box {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 25px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 0 10px rgba(100, 60, 20, 0.3);
+  }
+  .rules-box p {
+    font-size: 1.1rem;
+    margin: 10px 0;
+  }
+  .sections {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+  .pick-section, .guess-section {
+    background: rgba(255, 255, 255, 0.7);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 0 10px rgba(100, 60, 20, 0.3);
+    width: 90%;
+    max-width: 900px;
+  }
+  h2 {
+    margin-bottom: 10px;
+    color: #5d4037;
+  }
+  .chosen-player {
+    font-weight: bold;
+    color: #7b3f00;
+    font-size: 1.3rem;
+    margin-top: 10px;
+  }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    justify-content: center;
+    margin-top: 15px;
+  }
+  .player {
+    background-color: #d7ccc8;
+    border: 2px solid #a1887f;
+    border-radius: 12px;
+    padding: 15px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #3e2723;
+    transition: all 0.3s ease;
+    user-select: none;
+  }
+  .player:hover {
+    background-color: #bcaaa4;
+    transform: scale(1.05);
+  }
+  .player.eliminated {
+    background-color: #8d6e63;
+    color: #fefefe;
+    opacity: 0.6;
+    text-decoration: line-through;
+    transform: scale(0.95);
+  }
+  .player.selected {
+    background-color: #ffe0b2;
+    color: #4e342e;
+    border: 2px solid #3e2723;
+    transform: scale(1.1);
+  }
+  button {
+    margin-top: 15px;
+    background-color: #a1887f;
+    color: #fff8e1;
+    border: none;
+    padding: 10px 18px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  button:hover {
+    background-color: #8d6e63;
+  }
+  img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🏫 Guess Who: School Edition 🏫</h1>
+
+<!-- RULES SCREEN -->
+<div id="rules-screen" class="center-box">
+  <div class="rules-box">
+    <h2>📜 Rules</h2>
+    <p>1️⃣ Select a player for your opponent to guess, then press <strong>"Lock In Student"</strong>.</p>
+    <p>2️⃣ No peeking at your opponent’s screen!</p>
+    <p>3️⃣ No gender-based questions allowed.</p>
+    <p>Have fun and play fair!</p>
+    <button onclick="startGame()">I Understand</button>
+  </div>
+</div>
+
+<!-- MAIN GAME SECTIONS -->
+<div class="sections" id="main-game" style="display:none;">
+  <div class="pick-section" id="pick-section">
+    <h2>📚 Step 1: Pick Your Secret Student</h2>
+    <div id="pick-board" class="board"></div>
+    <div class="chosen-player">Your Pick: <span id="your-pick">None</span></div>
+    <button onclick="confirmPick()">Lock In Student</button>
+  </div>
+
+  <div class="guess-section" id="guess-section" style="display:none;">
+    <h2>🧠 Step 2: Class Guess Board</h2>
+    <div id="chosen-display" class="chosen-player"></div>
+    <p>Tap a student to cross them out while you guess!</p>
+    <div id="guess-board" class="board"></div>
+    <button onclick="resetGuessBoard()">Reset Board</button>
+    <button onclick="fullReset()">Full Reset</button>
+  </div>
+</div>
+
+<script>
+const PLAYERS = [
+  {id:1,name:'Lee Ziho',img:'Images/ziho.png'},
+  {id:2,name:'Keandra Giri',img:'Images/kean.png'},
+  {id:3,name:'Gemma Emmanuel',img:'Images/gemm.png'},
+  {id:4,name:'Brandon Tan',img:'Images/brant.png'},
+  {id:5,name:'Meeven Jeff',img:'Images/meev.png'},
+  {id:6,name:'Grady Chandra',img:'Images/grad.png'},
+  {id:7,name:'Brandon Budi',img:'Images/branb.png'},
+  {id:8,name:'Rohan Raj',img:'Images/roha.png'},
+  {id:9,name:'Mathew Ephraim',img:'Images/math.png'},
+  {id:10,name:'Gatherine Kaur',img:'Images/gath.png'},
+  {id:11, name:'Tasia Dewi', img:'Images/tasi.png'},
+  {id:12, name:'Sun Woo', img:'Images/sunw.png'},
+  {id:13, name:'Jang Juae', img:'Images/jang.png'},
+  {id:14, name:'Farhan Athar', img:'Images/farh.png'},
+  {id:15, name:'Timmy Paat', img:'Images/timm.png'},
+  {id:16, name:'Ezekiel Pambudi', img:'Images/ezek.png'},
+  {id:17, name:'Alfred Chousen', img:'Images/alfr.png'},
+  {id:18, name:'Alana Putri', img:'Images/alan.png'},
+  {id:19, name:'Alexa Siswanto', img:'Images/alex.png'},
+  {id:20, name:'Bianca Callula', img:'Images/bian.png'},
+  {id:21, name:'Andrea Calya', img:'Images/andr.png'},
+  {id:22, name:'Jannette Lynn', img:'Images/jann.png'},
+  {id:23, name:'Arsya Zahransyah', img:'Images/arsy.png'},
+  {id:24, name:'Kiyara Hiera', img:'Images/kiya.png'},
+  {id:25, name:'Justyn Oliver', img:'Images/just.png'},
+  {id:26, name:'Ashlynn Djo', img:'Images/ashl.png'},
+  {id:27, name:'Chiara Alana', img:'Images/chia.png'},
+  {id:28, name:'Annissa Nuril', img:'Images/anni.png'},
+  {id:29, name:'Atha Dindra', img:'Images/atha.png'},
+  {id:30, name:'Mischandra Nadea', img:'Images/misc.png'},
+  {id:31, name:'Nadia Ferris', img:'Images/nadi.png'},
+  {id:32, name:'Leandra Alanghiya', img:'Images/lean.png'},
+  {id:33, name:'Khalilah Safwana', img:'Images/khal.png'},
+  {id:34, name:'Maliqa Elaine', img:'Images/mali.png'},
+  {id:35, name:'Shazia Farrin', img:'Images/shaz.png'},
+  {id:36, name:'Priscilla Chanel', img:'Images/pris.png'},
+  {id:37, name:'Keenan Saafi', img:'Images/keens.png'},
+  {id:38, name:'Gazza Cahya', img:'Images/gazz.png'},
+  {id:39, name:'Raffa Tipa', img:'Images/raff.png'},
+  {id:40, name:'Ian Isnandar', img:'Images/iani.png'},
+  {id:41, name:'Jason Harsono', img:'Images/jaso.png'},
+  {id:42, name:'Athaya Okaprama', img:'Images/atha2.png'},
+  {id:43, name:'Keenan Arkananta', img:'Images/keena.png'},
+  {id:44, name:'Dennis Gunawan', img:'Images/denn.png'},
+  {id:45, name:'Jasmine Azalea', img:'Images/jasm.png'},
+  {id:46, name:'Zsa Zsa', img:'Images/zsaz.png'},
+  {id:47, name:'Trudy Rubies', img:'Images/trud.png'},
+  {id:48, name:'Callysta Nadya', img:'Images/call.png'},
+  {id:49, name:'Falsa Farah', img:'Images/fals.png'},
+  {id:50, name:'Danica Satyagraha', img:'Images/dani.png'}
+];
+
+const pickBoard = document.getElementById("pick-board");
+const guessBoard = document.getElementById("guess-board");
+const yourPickText = document.getElementById("your-pick");
+const guessSection = document.getElementById("guess-section");
+const pickSection = document.getElementById("pick-section");
+const rulesScreen = document.getElementById("rules-screen");
+const mainGame = document.getElementById("main-game");
+const chosenDisplay = document.getElementById("chosen-display");
+
+let chosenPlayer = null;
+let confirmed = false;
+
+function startGame() {
+  rulesScreen.style.display = "none";
+  mainGame.style.display = "flex";
+  renderBoards();
+}
+
+function renderBoards() {
+  pickBoard.innerHTML = "";
+  guessBoard.innerHTML = "";
+
+  PLAYERS.forEach(player => {
+    // pick board
+    const pickDiv = document.createElement("div");
+    pickDiv.className = "player";
+    pickDiv.innerHTML = `<img src="${player.img}" alt="${player.name}"><div>${player.name}</div>`;
+    pickDiv.onclick = () => {
+      if (confirmed) return;
+      document.querySelectorAll("#pick-board .player").forEach(p => p.classList.remove("selected"));
+      pickDiv.classList.add("selected");
+      chosenPlayer = player.name;
+      yourPickText.textContent = player.name;
+    };
+    pickBoard.appendChild(pickDiv);
+
+    // guess board
+    const guessDiv = document.createElement("div");
+    guessDiv.className = "player";
+    guessDiv.innerHTML = `<img src="${player.img}" alt="${player.name}"><div>${player.name}</div>`;
+    guessDiv.onclick = () => guessDiv.classList.toggle("eliminated");
+    guessBoard.appendChild(guessDiv);
+  });
+}
+
+function confirmPick() {
+  if (!chosenPlayer) {
+    alert("Please select a student first!");
+    return;
+  }
+  confirmed = true;
+  pickSection.style.display = "none";
+  guessSection.style.display = "block";
+  chosenDisplay.textContent = "🎯 Your chosen student: " + chosenPlayer;
+}
+
+function resetGuessBoard() {
+  document.querySelectorAll("#guess-board .player").forEach(p => p.classList.remove("eliminated"));
+}
+
+function fullReset() {
+  chosenPlayer = null;
+  confirmed = false;
+  pickSection.style.display = "block";
+  guessSection.style.display = "none";
+  yourPickText.textContent = "None";
+  chosenDisplay.textContent = "";
+  renderBoards();
+}
+</script>
+
+</body>
+</html>
